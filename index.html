@@ -1,31 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>カメラプレビュー</title>
+  <title>外カメラ表示</title>
   <style>
     video {
       width: 100%;
-      max-height: 100vh;
+      max-width: 600px;
+      height: auto;
     }
   </style>
 </head>
 <body>
-  <h1>スマホカメラ表示テスト</h1>
-  <video id="camera" autoplay playsinline></video>
+  <h1>外カメラの映像</h1>
+  <video id="video" autoplay playsinline></video>
 
   <script>
-    const video = document.getElementById("camera");
+    async function startCamera() {
+      try {
+        const constraints = {
+          video: {
+            facingMode: { exact: "environment" } // 外カメラを指定
+          },
+          audio: false
+        };
 
-    // カメラの映像を取得
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then((stream) => {
-        video.srcObject = stream;
-      })
-      .catch((err) => {
-        console.error("カメラの取得に失敗しました:", err);
-        alert("カメラにアクセスできませんでした");
-      });
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const videoElement = document.getElementById('video');
+        videoElement.srcObject = stream;
+      } catch (error) {
+        console.error("カメラの起動に失敗しました:", error);
+      }
+    }
+
+    startCamera();
   </script>
 </body>
 </html>
