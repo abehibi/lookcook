@@ -2,18 +2,25 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>大きな外カメラ映像</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>全画面カメラ表示</title>
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      background-color: #000;
+      background-color: black;
+      overflow: hidden;
     }
+
     video {
-      width: 150vw;
-      height: 200vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       object-fit: cover;
+      z-index: -1;
     }
   </style>
 </head>
@@ -25,7 +32,7 @@
       try {
         const constraints = {
           video: {
-            facingMode: { exact: "environment" } // 外カメラを優先
+            facingMode: { exact: "environment" } // 外カメラを明示的に指定
           },
           audio: false
         };
@@ -34,11 +41,22 @@
         const videoElement = document.getElementById('video');
         videoElement.srcObject = stream;
       } catch (error) {
-        console.error("カメラの起動に失敗しました:", error);
+        console.warn("外カメラが使えないか、許可されていません。前面カメラに切り替えます。", error);
+        // 外カメラが使えなかった場合、前面カメラで再試行
+        try {
+          const fallbackConstraints = {
+            video: true,
+            audio: false
+          };
+          const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+          document.getElementById('video').srcObject = fallbackStream;
+        } catch (fallbackError) {
+          console.error("カメラが使用できません。", fallbackError);
+        }
       }
     }
 
-    startCamera();
+    window.addEventListener('load', startCamera);
   </script>
 </body>
 </html>
