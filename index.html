@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>スマホ外カメラ表示＋ライトボタン</title>
+  <title>スマホ外カメラ表示＋ライト＋シャッター</title>
   <style>
     body, html {
       margin: 0;
@@ -24,18 +24,38 @@
       object-fit: cover;
     }
 
+    /* 🔦 ライトボタン（上部） */
     #toggleLight {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
-      padding: 80px;
-      font-size: 100px;
+      padding: 20px;
+      font-size: 24px;
       background: rgba(0, 0, 0, 0.5);
       color: white;
       border: none;
-      outline: none;
       z-index: 10;
+    }
+
+    /* 📸 シャッターボタン（下部） */
+    #shutter {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 80px;
+      background-color: red;
+      border: none;
+      border-radius: 50%;
+      z-index: 10;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+    }
+
+    #shutter:active {
+      background-color: darkred;
     }
   </style>
 </head>
@@ -45,8 +65,11 @@
     <!-- 🎦 カメラ映像 -->
     <video id="video" autoplay playsinline></video>
 
-    <!-- 🔦 オーバーレイのライトボタン -->
+    <!-- 🔦 ライト切り替え -->
     <button id="toggleLight">ライトを点ける</button>
+
+    <!-- 📸 シャッターボタン -->
+    <button id="shutter"></button>
   </div>
 
   <script>
@@ -55,7 +78,8 @@
     let isTorchOn = false;
 
     const videoElement = document.getElementById('video');
-    const button = document.getElementById('toggleLight');
+    const lightButton = document.getElementById('toggleLight');
+    const shutterButton = document.getElementById('shutter');
 
     async function startCamera() {
       try {
@@ -83,13 +107,13 @@
           await track.applyConstraints({
             advanced: [{ torch: true }]
           });
-          button.textContent = 'ライトを消す';
+          lightButton.textContent = 'ライトを消す';
           isTorchOn = true;
         } else {
           await track.applyConstraints({
             advanced: [{ torch: false }]
           });
-          button.textContent = 'ライトを点ける';
+          lightButton.textContent = 'ライトを点ける';
           isTorchOn = false;
         }
       } catch (e) {
@@ -98,7 +122,26 @@
       }
     }
 
-    button.addEventListener('click', toggleFlashlight);
+    function takePhoto() {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+
+      const context = canvas.getContext('2d');
+      context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+      const dataURL = canvas.toDataURL('image/png');
+
+      // 撮影結果を確認したい場合は下記を利用
+      // const img = document.createElement('img');
+      // img.src = dataURL;
+      // document.body.appendChild(img);
+
+      console.log("写真撮影成功（Base64）:", dataURL);
+    }
+
+    lightButton.addEventListener('click', toggleFlashlight);
+    shutterButton.addEventListener('click', takePhoto);
     startCamera();
   </script>
 
