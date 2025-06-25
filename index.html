@@ -2,62 +2,42 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>全画面カメラ表示</title>
+  <title>スマホ外カメラ表示</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: black;
-      overflow: hidden;
-    }
-
     video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      z-index: -1;
+      width: 100%;
+      height: auto;
     }
   </style>
 </head>
 <body>
+  <h1>外カメラ映像</h1>
   <video id="video" autoplay playsinline></video>
 
   <script>
     async function startCamera() {
-      try {
-        const constraints = {
-          video: {
-            facingMode: { exact: "environment" } // 外カメラを明示的に指定
-          },
-          audio: false
-        };
+      const constraints = {
+        video: {
+          facingMode: { exact: "environment" } // 外カメラを指定
+        },
+        audio: false
+      };
 
+      try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         const videoElement = document.getElementById('video');
         videoElement.srcObject = stream;
       } catch (error) {
-        console.warn("外カメラが使えないか、許可されていません。前面カメラに切り替えます。", error);
-        // 外カメラが使えなかった場合、前面カメラで再試行
-        try {
-          const fallbackConstraints = {
-            video: true,
-            audio: false
-          };
-          const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-          document.getElementById('video').srcObject = fallbackStream;
-        } catch (fallbackError) {
-          console.error("カメラが使用できません。", fallbackError);
-        }
+        console.error('カメラへのアクセスに失敗しました:', error);
+        alert('カメラを起動できませんでした。ブラウザの設定をご確認ください。');
       }
     }
 
-    window.addEventListener('load', startCamera);
+    startCamera();
   </script>
+</body>
+</html>
+  #ライト
     <button id="toggleLight">ライトを点ける</button>
 
     <script>
