@@ -2,27 +2,52 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>スマホ外カメラ表示＋ライト</title>
+  <title>スマホ外カメラ表示＋ライトボタン</title>
   <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      background: black;
+    }
+
     video {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
     }
-    button {
-      display: block;
-      margin: 10px auto;
-      font-size: 18px;
-      padding: 10px 20px;
+
+    #toggleLight {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px;
+      font-size: 24px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      outline: none;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
 
-  <!-- 🔦 ライトボタン（上に表示） -->
-  <button id="toggleLight">ライトを点ける</button>
+  <div class="container">
+    <!-- 🎦 カメラ映像 -->
+    <video id="video" autoplay playsinline></video>
 
-  <!-- 🎥 カメラ映像 -->
-  <video id="video" autoplay playsinline></video>
+    <!-- 🔦 オーバーレイのライトボタン -->
+    <button id="toggleLight">ライトを点ける</button>
+  </div>
 
   <script>
     let stream = null;
@@ -34,15 +59,12 @@
 
     async function startCamera() {
       try {
-        // カメラストリーム取得
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { exact: "environment" } },
           audio: false
         });
 
         videoElement.srcObject = stream;
-
-        // トーチ制御に必要なトラックを取得
         track = stream.getVideoTracks()[0];
       } catch (error) {
         console.error('カメラへのアクセスに失敗しました:', error);
@@ -77,8 +99,9 @@
     }
 
     button.addEventListener('click', toggleFlashlight);
-
     startCamera();
   </script>
+
 </body>
 </html>
+
