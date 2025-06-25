@@ -2,38 +2,107 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>スマホ外カメラ表示</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>全画面カメラ表示</title>
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: black;
+      overflow: hidden;
+    }
+
     video {
-      width: 100%;
-      height: auto;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
     }
   </style>
 </head>
 <body>
-  <h1>外カメラ映像</h1>
   <video id="video" autoplay playsinline></video>
 
   <script>
     async function startCamera() {
-      const constraints = {
-        video: {
-          facingMode: { exact: "environment" } // 外カメラを指定
-        },
-        audio: false
-      };
-
       try {
+        const constraints = {
+          video: {
+            facingMode: { exact: "environment" } // 外カメラを明示的に指定
+          },
+          audio: false
+        };
+
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         const videoElement = document.getElementById('video');
         videoElement.srcObject = stream;
       } catch (error) {
-        console.error('カメラへのアクセスに失敗しました:', error);
-        alert('カメラを起動できませんでした。ブラウザの設定をご確認ください。');
+        console.warn("外カメラが使えないか、許可されていません。前面カメラに切り替えます。", error);
+        // 外カメラが使えなかった場合、前面カメラで再試行
+        try {
+          const fallbackConstraints = {
+            video: true,
+            audio: false
+          };
+          const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+          document.getElementById('video').srcObject = fallbackStream;
+        } catch (fallbackError) {
+          console.error("カメラが使用できません。", fallbackError);
+        }
       }
     }
 
-    startCamera();
+    window.addEventListener('load', startCamera);
   </script>
-</body>
+    <button id="toggleLight">ライトを点ける</button>
+
+    <script>
+      let stream = null;
+      let track = null;
+      let isOn = false;
+  
+      const button = document.getElementById('toggleLight');
+  
+      async function toggleFlashlight() {
+        if (!isOn) {
+          try {
+            // カメラ映像を取得（ライト制御のため）
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            track = stream.getVideoTracks()[0];
+  
+            // トーチ（ライト）モードをオンにする
+            await track.applyConstraints({
+              advanced: [{ torch: true }]
+            });
+  
+            button.textContent = 'ライトを消す';
+            isOn = true;
+          } catch (e) {
+            alert('ライトを点灯できませんでした。\n対応している端末・ブラウザか確認してください。');
+            console.error(e);
+          }
+        } else {
+          // トーチオフ
+          if (track) {
+            await track.applyConstraints({
+              advanced: [{ torch: false }]
+            });
+            track.stop();
+          }
+          if (stream) {
+            stream.getTracks().forEach(t => t.stop());
+          }
+          button.textContent = 'ライトを点ける';
+          isOn = false;
+        }
+      }
+  
+      button.addEventListener('click', toggleFlashlight);
+    </script>
+  </body>
 </html>
+
