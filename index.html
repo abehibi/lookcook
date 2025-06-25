@@ -24,34 +24,35 @@
       object-fit: cover;
     }
 
-    /* 🔦 ライトボタン（上部） */
     #toggleLight {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
-      padding: 70px;
-      font-size: 100px;
+      padding: 20px;
+      font-size: 24px;
       background: rgba(0, 0, 0, 0.5);
       color: white;
       border: none;
       z-index: 10;
     }
 
-    /* 📸 シャッターボタン（下部） */
+    /* 📸 横長・大きなシャッターボタン */
     #shutter {
       position: absolute;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 80px;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
       background-color: red;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
       border: none;
-      border-radius: 50%;
       z-index: 10;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.4);
+      transition: background-color 0.3s;
     }
 
     #shutter:active {
@@ -62,14 +63,13 @@
 <body>
 
   <div class="container">
-    <!-- 🎦 カメラ映像 -->
     <video id="video" autoplay playsinline></video>
 
     <!-- 🔦 ライト切り替え -->
     <button id="toggleLight">ライトを点ける</button>
 
-    <!-- 📸 シャッターボタン -->
-    <button id="shutter"></button>
+    <!-- 📸 横長シャッターボタン -->
+    <button id="shutter">シャッター</button>
   </div>
 
   <script>
@@ -131,13 +131,8 @@
       context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
       const dataURL = canvas.toDataURL('image/png');
-
-      // 撮影結果を確認したい場合は下記を利用
-      // const img = document.createElement('img');
-      // img.src = dataURL;
-      // document.body.appendChild(img);
-
-      console.log("写真撮影成功（Base64）:", dataURL);
+      console.log("写真撮影成功:", dataURL);
+      // 必要に応じて表示・保存処理を追加
     }
 
     lightButton.addEventListener('click', toggleFlashlight);
@@ -147,4 +142,5 @@
 
 </body>
 </html>
+
 
