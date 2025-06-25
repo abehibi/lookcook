@@ -11,33 +11,7 @@
   </style>
 </head>
 <body>
-  <h1>外カメラ映像</h1>
-  <video id="video" autoplay playsinline></video>
-
-  <script>
-    async function startCamera() {
-      const constraints = {
-        video: {
-          facingMode: { exact: "environment" } // 外カメラを指定
-        },
-        audio: false
-      };
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        const videoElement = document.getElementById('video');
-        videoElement.srcObject = stream;
-      } catch (error) {
-        console.error('カメラへのアクセスに失敗しました:', error);
-        alert('カメラを起動できませんでした。ブラウザの設定をご確認ください。');
-      }
-    }
-
-    startCamera();
-  </script>
-</body>
-</html>
-  //ライト
+    //ライト
     <button id="toggleLight">ライトを点ける</button>
 
     <script>
@@ -83,6 +57,30 @@
   
       button.addEventListener('click', toggleFlashlight);
     </script>
-  </body>
+  <h1>外カメラ映像</h1>
+  <video id="video" autoplay playsinline></video>
+
+  <script>
+    async function startCamera() {
+      const constraints = {
+        video: {
+          facingMode: { exact: "environment" } // 外カメラを指定
+        },
+        audio: false
+      };
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const videoElement = document.getElementById('video');
+        videoElement.srcObject = stream;
+      } catch (error) {
+        console.error('カメラへのアクセスに失敗しました:', error);
+        alert('カメラを起動できませんでした。ブラウザの設定をご確認ください。');
+      }
+    }
+
+    startCamera();
+  </script>
+</body>
 </html>
 
