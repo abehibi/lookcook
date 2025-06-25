@@ -63,18 +63,15 @@
     <button id="shutter">シャッター</button>
   </div>
 
-  <!-- 短いクリック音のbase64音声 -->
-  <audio id="shutterSound" preload="auto" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA="></audio>
-
   <script>
     const video = document.getElementById('video');
     const shutterBtn = document.getElementById('shutter');
     const toggleLightBtn = document.getElementById('toggleLight');
-    const shutterSound = document.getElementById('shutterSound');
 
     let stream;
     let videoTrack;
     let torchOn = false;
+    let isPaused = false; // 映像が止まっているかを管理するフラグ
 
     async function startCamera() {
       try {
@@ -110,9 +107,16 @@
     };
 
     shutterBtn.onclick = () => {
-      shutterSound.currentTime = 0;
-      shutterSound.play();
-
+      if (isPaused) {
+        // シャッター後に画面を再開
+        video.play();
+        shutterBtn.textContent = 'シャッター';
+      } else {
+        // シャッターを押した時に画面を止める
+        video.pause();
+        shutterBtn.textContent = '再開';
+      }
+      isPaused = !isPaused;
     };
 
     startCamera();
