@@ -1,146 +1,123 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>スマホ外カメラ表示＋ライト＋シャッター</title>
+  <meta charset="UTF-8" />
+  <title>スマホカメラ＋ライト＋シャッター</title>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
+    html, body {
+      margin: 0; padding: 0; height: 100%;
       overflow: hidden;
+      background: black;
     }
-
     .container {
       position: relative;
       width: 100%;
       height: 100vh;
       background: black;
     }
-
     video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
     #toggleLight {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
-      padding: 60px;
-      font-size: 100px;
+      padding: 60px 20px;
+      font-size: 48px;
       background: rgba(0, 0, 0, 0.5);
       color: white;
       border: none;
       z-index: 10;
+      -webkit-tap-highlight-color: transparent;
     }
-
-    /* 📸 横長・大きなシャッターボタン */
     #shutter {
       position: absolute;
-      bottom: 0;
+      bottom: env(safe-area-inset-bottom, 20px);
       left: 0;
       width: 100%;
-      padding: 60px;
-      height: 100px;
-      background-color: red;
-      color: white;
-      font-size: 100px;
+      padding: 40px 20px;
+      font-size: 64px;
       font-weight: bold;
+      background: rgba(255, 0, 0, 0.5);
+      color: white;
       border: none;
-      z-index: 10;
       cursor: pointer;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.4);
-      transition: background-color 0.3s;
+      z-index: 10;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: background-color 0.3s ease;
     }
-
     #shutter:active {
-      background-color: darkred;
+      background: rgba(139, 0, 0, 0.7);
     }
   </style>
 </head>
 <body>
-
   <div class="container">
     <video id="video" autoplay playsinline></video>
 
-    <!-- 🔦 ライト切り替え -->
     <button id="toggleLight">ライトを点ける</button>
-
-    <!-- 📸 横長シャッターボタン -->
     <button id="shutter">シャッター</button>
   </div>
 
-  <script>
-    let stream = null;
-    let track = null;
-    let isTorchOn = false;
+  <!-- 短いクリック音のbase64音声 -->
+  <audio id="shutterSound" preload="auto" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA="></audio>
 
-    const videoElement = document.getElementById('video');
-    const lightButton = document.getElementById('toggleLight');
-    const shutterButton = document.getElementById('shutter');
+  <script>
+    const video = document.getElementById('video');
+    const shutterBtn = document.getElementById('shutter');
+    const toggleLightBtn = document.getElementById('toggleLight');
+    const shutterSound = document.getElementById('shutterSound');
+
+    let stream;
+    let videoTrack;
+    let torchOn = false;
 
     async function startCamera() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: "environment" } },
-          audio: false
+          video: { facingMode: "environment" }
         });
+        video.srcObject = stream;
 
-        videoElement.srcObject = stream;
-        track = stream.getVideoTracks()[0];
-      } catch (error) {
-        console.error('カメラへのアクセスに失敗しました:', error);
-        alert('カメラを起動できませんでした。ブラウザの設定をご確認ください。');
+        videoTrack = stream.getVideoTracks()[0];
+      } catch (e) {
+        alert('カメラを起動できませんでした。');
       }
     }
 
-    async function toggleFlashlight() {
-      if (!track) {
-        alert("カメラがまだ起動していません。");
+    toggleLightBtn.onclick = async () => {
+      if (!videoTrack) return;
+
+      const capabilities = videoTrack.getCapabilities();
+      if (!capabilities.torch) {
+        alert('このデバイスはライト機能をサポートしていません。');
         return;
       }
 
       try {
-        if (!isTorchOn) {
-          await track.applyConstraints({
-            advanced: [{ torch: true }]
-          });
-          lightButton.textContent = 'ライトを消す';
-          isTorchOn = true;
-        } else {
-          await track.applyConstraints({
-            advanced: [{ torch: false }]
-          });
-          lightButton.textContent = 'ライトを点ける';
-          isTorchOn = false;
-        }
+        torchOn = !torchOn;
+        await videoTrack.applyConstraints({
+          advanced: [{ torch: torchOn }]
+        });
+        toggleLightBtn.textContent = torchOn ? 'ライトを消す' : 'ライトを点ける';
       } catch (e) {
-        alert('ライトの制御に失敗しました。対応している端末か確認してください。');
-        console.error(e);
+        alert('ライトの切り替えに失敗しました。');
       }
-    }
+    };
 
-    function takePhoto() {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
+    shutterBtn.onclick = () => {
+      shutterSound.currentTime = 0;
+      shutterSound.play();
 
-      const context = canvas.getContext('2d');
-      context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      // 写真撮影処理（ここに必要なら追加）
+      alert('シャッターを押しました！');
+    };
 
-      const dataURL = canvas.toDataURL('image/png');
-      console.log("写真撮影成功:", dataURL);
-      // 必要に応じて表示・保存処理を追加
-    }
-
-    lightButton.addEventListener('click', toggleFlashlight);
-    shutterButton.addEventListener('click', takePhoto);
     startCamera();
   </script>
 </body>
 </html>
-
-
