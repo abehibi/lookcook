@@ -112,14 +112,11 @@
     };
 
     shutterBtn.onclick = async () => {
-      // ボタンを一時無効化
       shutterBtn.disabled = true;
       shutterBtn.textContent = '送信中...';
 
-      // 映像を一時停止
       video.pause();
 
-      // 映像をcanvasに描画
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -135,13 +132,13 @@
         console.log('画像を送信しました');
       } catch (error) {
         console.error('送信失敗:', error);
-        alert('送信に失敗しました。');
+        alert('画像の送信に失敗しました。');
+      } finally {
+        // 成功・失敗どちらでも再開
+        video.play();
+        shutterBtn.textContent = 'シャッター';
+        shutterBtn.disabled = false;
       }
-
-      // 映像を再開・ボタンも戻す
-      video.play();
-      shutterBtn.textContent = 'シャッター';
-      shutterBtn.disabled = false;
     };
 
     startCamera();
