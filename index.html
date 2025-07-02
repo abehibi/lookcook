@@ -85,7 +85,6 @@
           video: { facingMode: "environment" }
         });
         video.srcObject = stream;
-
         videoTrack = stream.getVideoTracks()[0];
       } catch (e) {
         alert('カメラを起動できませんでした。');
@@ -112,42 +111,37 @@
       }
     };
 
-        shutterBtn.onclick = () => {
-      if (isPaused) {
-        // シャッター後に画面を再開
-        video.play();
-        shutterBtn.textContent = 'シャッター';
-      } else {
-        // シャッターを押した時に画面を止める
-        video.pause();
-        shutterBtn.textContent = '再開';
-      }
-      isPaused = !isPaused;
-    };
-
     shutterBtn.onclick = async () => {
+      // ボタンを一時無効化
+      shutterBtn.disabled = true;
+      shutterBtn.textContent = '送信中...';
+
+      // 映像を一時停止
+      video.pause();
+
       // 映像をcanvasに描画
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // canvasから画像データを取得（JPEG Base64）
       const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
       try {
-        // サーバーへ送信（URLは適宜変更）
         await fetch('http://localhost:5000/upload', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: imageDataUrl })
         });
-        alert('画像を送信しました。');
+        console.log('画像を送信しました');
       } catch (error) {
+        console.error('送信失敗:', error);
         alert('送信に失敗しました。');
-        console.error(error);
       }
+
+      // 映像を再開・ボタンも戻す
+      video.play();
+      shutterBtn.textContent = 'シャッター';
+      shutterBtn.disabled = false;
     };
 
     startCamera();
