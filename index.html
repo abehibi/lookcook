@@ -53,9 +53,6 @@
     #shutter:active {
       background: rgba(139, 0, 0, 0.7);
     }
-    canvas {
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -64,20 +61,17 @@
 
     <button id="toggleLight">ライトを点ける</button>
     <button id="shutter">シャッター</button>
-
-    <canvas id="canvas"></canvas>
   </div>
 
   <script>
     const video = document.getElementById('video');
     const shutterBtn = document.getElementById('shutter');
     const toggleLightBtn = document.getElementById('toggleLight');
-    const canvas = document.getElementById('canvas');
-    const context = canvas.getContext('2d');
 
     let stream;
     let videoTrack;
     let torchOn = false;
+    let isPaused = false; // 映像が止まっているかを管理するフラグ
 
     async function startCamera() {
       try {
@@ -85,6 +79,7 @@
           video: { facingMode: "environment" }
         });
         video.srcObject = stream;
+
         videoTrack = stream.getVideoTracks()[0];
       } catch (e) {
         alert('カメラを起動できませんでした。');
@@ -111,41 +106,17 @@
       }
     };
 
-    shutterBtn.onclick = async () => {
-      shutterBtn.disabled = true;
-      shutterBtn.textContent = '送信中...';
-
-      video.pause();
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-
-      try {
-        const response = await fetch('http://localhost:5000/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: imageDataUrl })
-        });
-
-        if (!response.ok) throw new Error('サーバーエラー');
-
-        console.log('画像を送信しました');
-      } catch (error) {
-        console.error('送信失敗:', error);
-        alert('画像の送信に失敗しました。最初からやり直してください。');
-      } finally {
-        // カメラ再開を明示的にPromiseで処理
-        video.play().catch(err => {
-          console.error("カメラ再開に失敗:", err);
-          alert("カメラの再開に失敗しました。ページをリロードしてください。");
-        });
-
+    shutterBtn.onclick = () => {
+      if (isPaused) {
+        // シャッター後に画面を再開
+        video.play();
         shutterBtn.textContent = 'シャッター';
-        shutterBtn.disabled = false;
+      } else {
+        // シャッターを押した時に画面を止める
+        video.pause();
+        shutterBtn.textContent = '再開';
       }
+      isPaused = !isPaused;
     };
 
     startCamera();
