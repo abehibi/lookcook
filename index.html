@@ -124,17 +124,21 @@
       const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
       try {
-        await fetch('http://localhost:5000/upload', {
+        const response = await fetch('http://localhost:5000/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: imageDataUrl })
         });
+
+        if (!response.ok) throw new Error('サーバーエラー');
+
         console.log('画像を送信しました');
+        // 必要なら alert('送信完了！');
       } catch (error) {
         console.error('送信失敗:', error);
-        alert('画像の送信に失敗しました。');
+        alert('画像の送信に失敗しました。最初からやり直してください。');
       } finally {
-        // 成功・失敗どちらでも再開
+        // 成功/失敗問わず初期状態に戻す
         video.play();
         shutterBtn.textContent = 'シャッター';
         shutterBtn.disabled = false;
