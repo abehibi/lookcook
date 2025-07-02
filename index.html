@@ -112,6 +112,19 @@
       }
     };
 
+        shutterBtn.onclick = () => {
+      if (isPaused) {
+        // シャッター後に画面を再開
+        video.play();
+        shutterBtn.textContent = 'シャッター';
+      } else {
+        // シャッターを押した時に画面を止める
+        video.pause();
+        shutterBtn.textContent = '再開';
+      }
+      isPaused = !isPaused;
+    };
+
     shutterBtn.onclick = async () => {
       // 映像をcanvasに描画
       canvas.width = video.videoWidth;
