@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>スマホカメラ＋ライト＋シャッター</title>
+  <title>スマホカメラ＋ライト＋YOLOv8検出</title>
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%;
@@ -58,11 +58,11 @@
 <body>
   <div class="container">
     <video id="video" autoplay playsinline></video>
-
     <button id="toggleLight">ライトを点ける</button>
     <button id="shutter">シャッター</button>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.11.0/dist/onnxruntime-web.min.js"></script>
   <script>
     const video = document.getElementById('video');
     const shutterBtn = document.getElementById('shutter');
@@ -72,6 +72,14 @@
     let videoTrack;
     let torchOn = false;
     let isPaused = false; // 映像が止まっているかを管理するフラグ
+
+    // ONNX.jsの準備
+    let model;
+
+    async function loadModel() {
+      // YOLOv8のONNXモデルをロード
+      model = await ort.InferenceSession.create('yolov8.onnx');  // 必要なモデルパスを指定
+    }
 
     async function startCamera() {
       try {
@@ -83,6 +91,54 @@
         videoTrack = stream.getVideoTracks()[0];
       } catch (e) {
         alert('カメラを起動できませんでした。');
+      }
+    }
+
+    // 物体検出を実行
+    async function detectObjects() {
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+
+      // 動画のフレームを取得
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, width, height);
+
+      // 画像データをONNXモデルに渡す
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const inputTensor = new ort.Tensor('float32', new Float32Array(imageData.data.buffer), [1, height, width, 4]);
+
+      // 推論を実行
+      const feeds = { input: inputTensor };
+      const output = await model.run(feeds);
+
+      // 推論結果を解析
+      const boxes = output.values().next().value.data; // 検出されたボックスの座標
+      const scores = output.values().next().value.data; // 検出されたスコア
+      const classes = output.values().next().value.data; // 検出されたクラス
+
+      // 結果を画面に描画
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(video, 0, 0, width, height);
+
+      // 検出結果を描画
+      for (let i = 0; i < boxes.length; i++) {
+        const [x1, y1, x2, y2] = boxes[i];
+        const score = scores[i];
+        const classId = classes[i];
+
+        if (score > 0.5) { // スコアが0.5以上のもののみ表示
+          ctx.strokeStyle = 'red';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x1 * width, y1 * height, (x2 - x1) * width, (y2 - y1) * height);
+
+          // クラス名とスコアを描画
+          ctx.fillStyle = 'red';
+          ctx.font = '20px Arial';
+          ctx.fillText(`Class: ${classId} - ${score.toFixed(2)}`, x1 * width, y1 * height);
+        }
       }
     }
 
@@ -108,11 +164,9 @@
 
     shutterBtn.onclick = () => {
       if (isPaused) {
-        // シャッター後に画面を再開
         video.play();
         shutterBtn.textContent = 'シャッター';
       } else {
-        // シャッターを押した時に画面を止める
         video.pause();
         shutterBtn.textContent = '再開';
       }
@@ -120,6 +174,8 @@
     };
 
     startCamera();
+    loadModel();
+    setInterval(detectObjects, 100); // 100ミリ秒ごとに物体検出を実行
   </script>
 </body>
 </html>
