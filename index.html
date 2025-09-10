@@ -78,7 +78,7 @@
     }
 
     async function loadModel() {
-      model = await ort.InferenceSession.create("yolov8n.onnx");
+      model = await ort.InferenceSession.create("yolov8n.pt");
     }
 
     function preprocess() {
