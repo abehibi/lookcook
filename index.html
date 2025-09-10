@@ -78,7 +78,7 @@
 
     async function loadModel() {
       // YOLOv8のONNXモデルをロード
-      model = await ort.InferenceSession.create('yolov8.onnx');  // 必要なモデルパスを指定
+      model = await ort.InferenceSession.create('yolov8n.pt');  // 必要なモデルパスを指定
     }
 
     async function startCamera() {
