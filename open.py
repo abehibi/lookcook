@@ -10,11 +10,3 @@ if img is None:
 cv2.imshow("Neko no Gazo", img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
-from ultralytics import YOLO
-
-# YOLOv8モデルをロード
-model = YOLO('yolov8.pt')  # モデルを指定（自分のモデルを使ってください）
-
-# ONNX形式でエクスポート
-model.export(format='onnx')
